@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getSongs } from '../controllers/MusicController';
+import { MusicController } from '../controllers/MusicController';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../App';
@@ -9,7 +9,7 @@ import type { Song } from '../models/Songs';
 
 type MusicPlayerNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MusicPlayer'>;
 export default function MusicPlayerView() {
-  const songs = getSongs();
+  const songs = MusicController.getSongs();
   const navigation = useNavigation<MusicPlayerNavigationProp>();
 
   return (

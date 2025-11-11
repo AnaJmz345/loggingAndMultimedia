@@ -1,17 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Entypo } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../App';
+import { MusicController } from '../controllers/MusicController';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'IndividualSong'>;
 
 export default function IndividualSong({ route,navigation }: Props) {
-    const { song } = route.params;
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [volume, setVolume] = useState(0.6);
+  const { song } = route.params;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.6);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(1); // evitar división por 0
+
+ useEffect(() => {
+  // precargar al montar
+  MusicController.loadSong(song);
+
+  // detener cuando se salga
+  return () => {
+    MusicController.stopSong();
+  };
+}, []);
+
+  const togglePlay = async () => {
+    if (isPlaying) {
+      await MusicController.pauseSong();
+    } else {
+      await MusicController.playSong(song);
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleVolumeChange = async (value: number) => {
+    setVolume(value);
+    await MusicController.setVolume(value);
+  };
+
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
   return (
     <LinearGradient
       colors={['#0D77FF', '#0B0B0B', '#000']}
@@ -42,20 +78,24 @@ export default function IndividualSong({ route,navigation }: Props) {
           minimumTrackTintColor="#0D77FF"
           maximumTrackTintColor="#333"
           thumbTintColor="#0D77FF"
-          onValueChange={(value) => setVolume(value)}
+          onValueChange={handleVolumeChange}
         />
         <Ionicons name="volume-high" size={22} color="#fff" />
       </View>
 
       
       <View style={styles.progressContainer}>
-        <Text style={styles.timeText}>1:25</Text>
-        <View style={styles.progressBar}>
-          <View style={styles.progressFill} />
-        </View>
-        <Text style={styles.timeText}>3:32</Text>
-      </View>
-
+  <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+  <View style={styles.progressBar}>
+    <View
+      style={[
+        styles.progressFill,
+        { width: `${(progress * 100).toFixed(1)}%` as `${number}%` },
+      ]}
+    />
+  </View>
+  <Text style={styles.timeText}>{formatTime(duration)}</Text>
+</View>
       
       <View style={styles.mainControls}>
         <Ionicons name="play-skip-back" size={32} color="#fff" />
@@ -63,11 +103,15 @@ export default function IndividualSong({ route,navigation }: Props) {
           onPress={() => setIsPlaying(!isPlaying)}
           style={styles.playButton}
         >
+
+        <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
           <Ionicons
             name={isPlaying ? 'pause' : 'play'}
             size={32}
             color="#0D77FF"
           />
+        </TouchableOpacity>
+
         </TouchableOpacity>
         <Ionicons name="play-skip-forward" size={32} color="#fff" />
       </View>
