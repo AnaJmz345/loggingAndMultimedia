@@ -5,7 +5,7 @@ let currentSound: Audio.Sound | null = null;
 let isLoaded = false;
 
 export const MusicController = {
-  // ✅ Cargar la canción en memoria sin reproducir
+  //Precargar la canción en memoria sin reproducir
   async loadSong(song: Song) {
     try {
       if (currentSound) {
@@ -15,7 +15,7 @@ export const MusicController = {
       }
 
       const { sound } = await Audio.Sound.createAsync(song.audioFile, {
-        shouldPlay: false, // solo cargar
+        shouldPlay: false,
         volume: 0.6,
       });
 
@@ -27,7 +27,7 @@ export const MusicController = {
     }
   },
 
-  // ✅ Reproducir (si ya está cargada, solo playAsync)
+  // Reproducir cuando ya esté cargada la canción
   async playSong(song?: Song) {
     try {
       if (currentSound && isLoaded) {
@@ -74,12 +74,47 @@ export const MusicController = {
     return songs;
   },
 
-  // Devuelve progreso actual
+  // Devuelve progreso actual para la barra de progreso de minutos
   async getStatus() {
     if (currentSound) {
       const status = await currentSound.getStatusAsync();
       return status;
     }
     return null;
+  },
+
+  // Retroceder 10 seg
+  async minusTen(seconds: number = 10) {
+    if (currentSound) {
+      const status = await currentSound.getStatusAsync();
+      if (status.isLoaded) {
+        const newPos = Math.max(status.positionMillis - seconds * 1000, 0);
+        await currentSound.setPositionAsync(newPos);
+      }
+    }
+  },
+
+  // Adelantar 10 seg
+  async plusTen(seconds: number = 10) {
+    if (currentSound) {
+      const status = await currentSound.getStatusAsync();
+      if (status.isLoaded && status.durationMillis) {
+        const newPos = Math.min(
+          status.positionMillis + seconds * 1000,
+          status.durationMillis
+        );
+        await currentSound.setPositionAsync(newPos);
+      }
+    }
+  },
+
+  // Mover a una posición específica con el slider de progreso
+  async certainTime(positionMillis: number) {
+    if (currentSound) {
+      const status = await currentSound.getStatusAsync();
+      if (status.isLoaded) {
+        await currentSound.setPositionAsync(positionMillis);
+      }
+    }
   },
 };
