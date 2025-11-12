@@ -51,6 +51,7 @@ export default function IndividualSong({ route, navigation }: Props) {
         await MusicController.playSong(song);
         setIsPlaying(true);
       }
+      
     } catch (error) {
       await logError('Error al pausar/despausar reproducción', error);
     }
