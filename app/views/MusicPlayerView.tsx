@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MusicController } from '../controllers/MusicController';
@@ -6,11 +6,20 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../App';
 import type { Song } from '../models/Songs';
+import { logInfo,logError } from '../utils/logger';
 
 type MusicPlayerNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MusicPlayer'>;
 export default function MusicPlayerView() {
   const songs = MusicController.getSongs();
   const navigation = useNavigation<MusicPlayerNavigationProp>();
+
+  /*useEffect(() => {
+    const checkLogs = async () => {
+      const logs = await getLocalLogs();
+      console.log('Logs guardados localmente:', logs);
+    };
+    checkLogs();
+  }, []);*/
 
   return (
     <LinearGradient
@@ -25,7 +34,11 @@ export default function MusicPlayerView() {
             <TouchableOpacity 
                 key={song.id} 
                 style={styles.card}
-                onPress={() => navigation.navigate('IndividualSong', { song })}
+                onPress={() => {
+                    logInfo(`Canción seleccionada: ${song.title}`);
+                    navigation.navigate('IndividualSong', { song });
+                  }
+                }
             >
                 <Image source={song.coverImage} style={styles.image} />
                 <View style={styles.details}>

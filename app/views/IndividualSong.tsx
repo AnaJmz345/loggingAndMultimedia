@@ -6,6 +6,7 @@ import Slider from '@react-native-community/slider';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../App';
 import { MusicController } from '../controllers/MusicController';
+import { logInfo, logWarn, logError } from '../utils/logger';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'IndividualSong'>;
 
@@ -20,6 +21,7 @@ export default function IndividualSong({ route, navigation }: Props) {
   useEffect(() => {
     // precargar canción 
     MusicController.loadSong(song);
+    logInfo(`Pasamos a pantalla IndividualSong de: ${song.title}`);
 
     // actualizar barra cada 500 ms
     const interval = setInterval(async () => {
@@ -35,20 +37,24 @@ export default function IndividualSong({ route, navigation }: Props) {
     return () => {
       clearInterval(interval);
       MusicController.stopSong();
+      logInfo(`Saliendo de pantalla IndividualSong: ${song.title}`);
     };
   }, []);
 
   //Para el play, si está corriendo la canción y le das click al botón, pausa la música. Si no está corriendo,  le pone play 
   const play = async () => {
-    if (isPlaying) {
-      await MusicController.pauseSong();
-      setIsPlaying(false);
+    try {
+      if (isPlaying) {
+        await MusicController.pauseSong();
+        setIsPlaying(false);
+      } else {
+        await MusicController.playSong(song);
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      await logError('Error al pausar/despausar reproducción', error);
     }
-    else {
-      await MusicController.playSong(song);
-      setIsPlaying(true);
-    }
-  };
+} ;
 
   const handleVolumeChange = async (value: number) => {
     setVolume(value);

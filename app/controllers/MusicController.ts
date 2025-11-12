@@ -1,6 +1,6 @@
 import { Audio } from 'expo-av';
 import { Song, songs } from '../models/Songs';
-
+import { logInfo, logWarn, logError } from '../utils/logger';
 let currentSound: Audio.Sound | null = null;
 let isLoaded = false;
 
@@ -21,100 +21,144 @@ export const MusicController = {
 
       currentSound = sound;
       isLoaded = true;
-      console.log('Canción precargada:', song.title);
+      await logInfo(`Canción precargada: ${song.title}`);
     } catch (error) {
-      console.error('Error al cargar la canción:', error);
+      await logError('Error al cargar canción', error);
     }
   },
 
   // Reproducir cuando ya esté cargada la canción
   async playSong(song?: Song) {
     try {
-      if (currentSound && isLoaded) {
-        await currentSound.playAsync();
-      } else {
-        await this.loadSong(song!);
-        await currentSound?.playAsync();
-      }
+        if (currentSound && isLoaded) {
+            await currentSound.playAsync();
+        
+        } else {
+            await this.loadSong(song!);
+            await currentSound?.playAsync();
+        }
+        await logInfo(`Reproduciendo: ${song?.title}`);
+
     } catch (error) {
-      console.error('Error al reproducir:', error);
+      await logError('Error al reproducir canción', error);
     }
   },
 
   // Pausar canción
   async pauseSong() {
-    if (currentSound) {
-      await currentSound.pauseAsync();
+    try {
+      if (currentSound) {
+        await currentSound.pauseAsync();
+        await logInfo('Canción pausada');
+      }
+    } catch (error) {
+      await logError('Error al pausar', error);
     }
   },
 
   // Reanudar canción
   async resumeSong() {
-    if (currentSound) {
-      await currentSound.playAsync();
+    try {
+      if (currentSound) {
+        await currentSound.playAsync();
+        await logInfo('Despausa');
+      }
+    } catch (error) {
+      await logError('Error al despausar', error);
     }
   },
 
   // Cambiar volumen
   async setVolume(value: number) {
-    if (currentSound) {
-      await currentSound.setVolumeAsync(value);
+    try {
+      if (currentSound) {
+        await currentSound.setVolumeAsync(value);
+        await logInfo(`Volumen cambiado a ${(value * 100).toFixed(0)}%`);
+      }
+    } catch (error) {
+      await logError('Error al cambiar volumen', error);
     }
   },
 
   // Detener
   async stopSong() {
-    if (currentSound) {
-      await currentSound.stopAsync();
+    try {
+      if (currentSound) {
+        await currentSound.stopAsync();
+        await logInfo('Canción detenida');
+      }
+    } catch (error) {
+      await logError('Error al detener canción', error);
     }
   },
 
   // Devuelve lista
   getSongs() {
+    logInfo('Solicitando lista de canciones');
     return songs;
   },
 
   // Devuelve progreso actual para la barra de progreso de minutos
   async getStatus() {
-    if (currentSound) {
-      const status = await currentSound.getStatusAsync();
-      return status;
+    try {
+      if (currentSound) {
+        const status = await currentSound.getStatusAsync();
+        return status;
+      }
+      return null;
+    } catch (error) {
+      await logError('Error al obtener estado del audio', error);
+      return null;
     }
-    return null;
   },
 
   // Retroceder 10 seg
   async minusTen(seconds: number = 10) {
-    if (currentSound) {
-      const status = await currentSound.getStatusAsync();
-      if (status.isLoaded) {
-        const newPos = Math.max(status.positionMillis - seconds * 1000, 0);
-        await currentSound.setPositionAsync(newPos);
+    try {
+      if (currentSound) {
+        const status = await currentSound.getStatusAsync();
+        if (status.isLoaded) {
+          const newPos = Math.max(status.positionMillis - seconds * 1000, 0);
+          await currentSound.setPositionAsync(newPos);
+          await logInfo(`Retrocediendo ${seconds} seg`);
+        }
       }
+    } catch (error) {
+      await logError('Error al retroceder audio', error);
     }
   },
 
   // Adelantar 10 seg
   async plusTen(seconds: number = 10) {
-    if (currentSound) {
-      const status = await currentSound.getStatusAsync();
-      if (status.isLoaded && status.durationMillis) {
-        const newPos = Math.min(
-          status.positionMillis + seconds * 1000,
-          status.durationMillis
-        );
-        await currentSound.setPositionAsync(newPos);
+    try {
+      if (currentSound) {
+        const status = await currentSound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          const newPos = Math.min(
+            status.positionMillis + seconds * 1000,
+            status.durationMillis
+          );
+          await currentSound.setPositionAsync(newPos);
+          await logInfo(`Adelantando ${seconds} seg`);
+        }
       }
+    } catch (error) {
+      await logError('Error al adelantar audio', error);
     }
   },
 
   // Mover a una posición específica con el slider de progreso
   async certainTime(positionMillis: number) {
-    if (currentSound) {
-      const status = await currentSound.getStatusAsync();
-      if (status.isLoaded) {
-        await currentSound.setPositionAsync(positionMillis);
+    try {
+      if (currentSound) {
+        const status = await currentSound.getStatusAsync();
+        if (status.isLoaded) {
+          await currentSound.setPositionAsync(positionMillis);
+          await logInfo(`Saltando al tiempo : ${positionMillis} ms`);
+        }
       }
+    } catch (error) {
+      await logError('Error al mover tiempo del audio', error);
     }
   },
 };
