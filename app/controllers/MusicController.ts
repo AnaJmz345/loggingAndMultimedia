@@ -1,6 +1,7 @@
 import { Audio } from 'expo-av';
 import { Song, songs } from '../models/Songs';
 import { logInfo, logWarn, logError } from '../utils/logger';
+import { Alert } from 'react-native';
 let currentSound: Audio.Sound | null = null;
 let isLoaded = false;
 
@@ -24,6 +25,7 @@ export const MusicController = {
       await logInfo(`Canción precargada: ${song.title}`);
     } catch (error) {
       await logError('Error al cargar canción', error);
+      alert('Error al cargar la canción');
     }
   },
 
@@ -53,6 +55,7 @@ export const MusicController = {
       }
     } catch (error) {
       await logError('Error al pausar', error);
+      
     }
   },
 
